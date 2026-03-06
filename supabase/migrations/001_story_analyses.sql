@@ -7,6 +7,7 @@ create table if not exists story_analyses (
   cliffhanger_scores jsonb not null default '[]',
   retention_heatmap jsonb not null default '[]',
   optimization_suggestions jsonb not null default '[]',
+  story_score jsonb,
   share_token text unique,
   created_at timestamptz default now()
 );

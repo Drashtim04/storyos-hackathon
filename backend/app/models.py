@@ -44,6 +44,18 @@ class OptimizationSuggestion(BaseModel):
     episodes: list[str]
 
 
+class StoryScoreBreakdown(BaseModel):
+    cliffhanger_strength: int
+    emotional_progression: int
+    retention_stability: int
+
+
+class StoryScore(BaseModel):
+    score: int
+    breakdown: StoryScoreBreakdown
+    binge_potential_score: int | None = None
+
+
 class StoryAnalysis(BaseModel):
     id: str | None = None
     story_idea: str
@@ -52,6 +64,7 @@ class StoryAnalysis(BaseModel):
     cliffhanger_scores: list[CliffhangerItem]
     retention_heatmap: list[RetentionRow]
     optimization_suggestions: list[OptimizationSuggestion]
+    story_score: StoryScore | None = None
     share_token: str | None = None
     created_at: str | None = None
 

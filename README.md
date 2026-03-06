@@ -16,8 +16,8 @@ Full-stack application for analyzing story ideas: chat-based input → AI pipeli
 4. **Emotional progression** – Tension, joy, surprise, conflict across episodes
 5. **Cliffhanger scoring** – Per-episode hook strength (0–100)
 6. **Retention risk prediction** – Heatmap by episode segment
-7. **Optimization suggestions** – Pacing, emotional peaks, retention tips
-
+7. **Optimization suggestions** – Pacing, emotional peaks, retention tips9. **Story Quality Score** – Composite quality metric with detailed breakdown
+10. **Binge Potential Score** – Judges‑friendly one‑line metric showing how addictive the story is (0–100) derived from cliffhanger escalation, emotional intensity, and retention resistance
 **Export:** PDF report and shareable link (when Supabase is configured).
 
 ## Quick start

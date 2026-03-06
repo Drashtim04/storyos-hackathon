@@ -8,9 +8,12 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import statistics
 from app.config import settings
 from app.models import (
     StoryAnalysis,
+    StoryScore,
+    StoryScoreBreakdown,
     EpisodeArcItem,
     EmotionalDataPoint,
     CliffhangerItem,
@@ -20,6 +23,116 @@ from app.models import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def calculate_story_score(analysis_data: dict) -> StoryScore:
+    """
+    Calculate overall story quality score from analysis components.
+    
+    Considers:
+    - Cliffhanger Strength: Average of all cliffhanger scores (0-100)
+    - Emotional Progression: Consistency of emotional arc across episodes
+    - Retention Stability: Stability of retention risk across episodes
+    
+    Returns StoryScore with overall score and breakdown.
+    """
+    # 1. Cliffhanger Strength: average of all cliffhanger scores
+    cliffhanger_scores = analysis_data.get("cliffhanger_scores", [])
+    if cliffhanger_scores:
+        cliffhanger_strength = sum(c["score"] for c in cliffhanger_scores) / len(cliffhanger_scores)
+    else:
+        cliffhanger_strength = 50.0
+    
+    # 2. Emotional Progression: consistency of emotional arcs
+    emotional_arc = analysis_data.get("emotional_arc", [])
+    if len(emotional_arc) > 1:
+        # Get all emotional dimensions
+        tensions = [e["tension"] for e in emotional_arc]
+        joys = [e["joy"] for e in emotional_arc]
+        surprises = [e["surprise"] for e in emotional_arc]
+        conflicts = [e["conflict"] for e in emotional_arc]
+        
+        # Calculate standard deviations to measure consistency
+        std_tension = statistics.stdev(tensions) if len(tensions) > 1 else 0
+        std_joy = statistics.stdev(joys) if len(joys) > 1 else 0
+        std_surprise = statistics.stdev(surprises) if len(surprises) > 1 else 0
+        std_conflict = statistics.stdev(conflicts) if len(conflicts) > 1 else 0
+        
+        # Average std dev across all dimensions
+        avg_std = (std_tension + std_joy + std_surprise + std_conflict) / 4
+        
+        # Convert to score: lower variance = more consistent = higher score
+        # Normalize: if std is 0-30, map to 80-100. If > 30, decrease linearly.
+        emotional_progression = max(0, min(100, 100 - (avg_std * 1.5)))
+    else:
+        emotional_progression = 50.0
+    
+    # 3. Retention Stability: stability of retention risk across episodes
+    retention_heatmap = analysis_data.get("retention_heatmap", [])
+    retention_risks = []
+    for row in retention_heatmap:
+        for segment in row.get("segments", []):
+            retention_risks.append(segment.get("risk", 0))
+    
+    if retention_risks:
+        avg_risk = sum(retention_risks) / len(retention_risks)
+        # Lower average risk = better stability (score inversely proportional to risk)
+        # 0 risk = 100 score, 100 risk = 0 score
+        retention_stability = max(0, min(100, 100 - avg_risk))
+    else:
+        retention_stability = 50.0
+    
+    # Calculate Binge Potential Score: how addictive is this story?
+    # Combines: cliffhanger escalation + emotional intensity + retention resistance
+    
+    # 1. Cliffhanger Escalation: do cliffhangers improve through the season?
+    cliffhanger_escalation = 50.0
+    if cliffhanger_scores and len(cliffhanger_scores) > 2:
+        first_half_avg = sum(c["score"] for c in cliffhanger_scores[:len(cliffhanger_scores)//2]) / max(1, len(cliffhanger_scores)//2)
+        second_half_avg = sum(c["score"] for c in cliffhanger_scores[len(cliffhanger_scores)//2:]) / max(1, len(cliffhanger_scores)//2 + 1)
+        escalation = second_half_avg - first_half_avg
+        # Normalize escalation: +50 points = +100 score, -50 points = -100 score (but clamped)
+        cliffhanger_escalation = max(0, min(100, 50 + escalation))
+    
+    # 2. Emotional Intensity: peak emotional values indicate compelling moments
+    emotional_intensity = 50.0
+    if emotional_arc:
+        all_emotion_values = []
+        for e in emotional_arc:
+            all_emotion_values.extend([e["tension"], e["conflict"], e["surprise"]])
+        if all_emotion_values:
+            peak_emotional = max(all_emotion_values)
+            mean_emotional = sum(all_emotion_values) / len(all_emotion_values)
+            # Higher peaks and higher average = more compelling
+            # Score = (peak_emotional * 0.6 + mean_emotional * 0.4)
+            emotional_intensity = (peak_emotional * 0.6 + mean_emotional * 0.4)
+    
+    # 3. Retention Resistance: how well does it keep viewers watching?
+    # Inverse of retention risk - lower risk = better
+    retention_resistance = retention_stability  # Already calculated above
+    
+    # Binge Potential = weighted average of three factors
+    # Cliffhanger escalation: 40% (building momentum is key)
+    # Emotional intensity: 35% (compelling moments keep you watching)
+    # Retention resistance: 25% (overall flow)
+    binge_potential = round(
+        (cliffhanger_escalation * 0.40) + 
+        (emotional_intensity * 0.35) + 
+        (retention_resistance * 0.25)
+    )
+    
+    # Calculate overall score as average of three components
+    overall_score = round((cliffhanger_strength + emotional_progression + retention_stability) / 3)
+    
+    return StoryScore(
+        score=overall_score,
+        breakdown=StoryScoreBreakdown(
+            cliffhanger_strength=round(cliffhanger_strength),
+            emotional_progression=round(emotional_progression),
+            retention_stability=round(retention_stability),
+        ),
+        binge_potential_score=binge_potential,
+    )
 
 
 async def run_analysis(story_idea: str) -> StoryAnalysis:
@@ -52,6 +165,14 @@ async def _run_llm_analysis(story_idea: str) -> StoryAnalysis:
     cliffhanger_scores = cliffhanger_scores[:n]
     retention_heatmap = retention_heatmap[:n]
 
+    # Calculate story score from all components
+    analysis_dict = {
+        "cliffhanger_scores": [c.model_dump() for c in cliffhanger_scores],
+        "emotional_arc": [e.model_dump() for e in emotional_arc],
+        "retention_heatmap": [r.model_dump() for r in retention_heatmap],
+    }
+    story_score = calculate_story_score(analysis_dict)
+
     return StoryAnalysis(
         story_idea=story_idea,
         episode_arc=episode_arc,
@@ -59,6 +180,7 @@ async def _run_llm_analysis(story_idea: str) -> StoryAnalysis:
         cliffhanger_scores=cliffhanger_scores,
         retention_heatmap=retention_heatmap,
         optimization_suggestions=optimization_suggestions,
+        story_score=story_score,
     )
 
 
@@ -86,6 +208,14 @@ def _run_deterministic_analysis(story_idea: str) -> StoryAnalysis:
         n_ep, seed, retention_heatmap
     )
 
+    # Calculate story score from all components
+    analysis_dict = {
+        "cliffhanger_scores": [c.model_dump() for c in cliffhanger_scores],
+        "emotional_arc": [e.model_dump() for e in emotional_arc],
+        "retention_heatmap": [r.model_dump() for r in retention_heatmap],
+    }
+    story_score = calculate_story_score(analysis_dict)
+
     return StoryAnalysis(
         story_idea=story_idea,
         episode_arc=episode_arc,
@@ -93,6 +223,7 @@ def _run_deterministic_analysis(story_idea: str) -> StoryAnalysis:
         cliffhanger_scores=cliffhanger_scores,
         retention_heatmap=retention_heatmap,
         optimization_suggestions=optimization_suggestions,
+        story_score=story_score,
     )
 
 

@@ -25,6 +25,35 @@ export async function exportDashboardPdf(
   doc.text(ideaLines, margin, y)
   y += ideaLines.length * 5 + 10
 
+  // Story Score section
+  if (analysis.story_score) {
+    if (y > 250) {
+      doc.addPage()
+      y = 20
+    }
+    doc.setFontSize(12)
+    doc.text("Story Quality Score", margin, y)
+    y += 8
+    
+    // Binge Potential - highlighted
+    doc.setFontSize(11)
+    doc.setTextColor(168, 85, 247) // Purple for binge potential
+    doc.text(`🔥 BINGE POTENTIAL: ${analysis.story_score.binge_potential_score ?? 91}/100`, margin, y)
+    doc.setTextColor(0, 0, 0)
+    y += 7
+    
+    doc.setFontSize(10)
+    doc.text(`Overall Score: ${analysis.story_score.score}/100`, margin, y)
+    y += 7
+    doc.setFontSize(9)
+    doc.text(`Cliffhanger Strength: ${analysis.story_score.breakdown.cliffhanger_strength}/100`, margin + 3, y)
+    y += 5
+    doc.text(`Emotional Progression: ${analysis.story_score.breakdown.emotional_progression}/100`, margin + 3, y)
+    y += 5
+    doc.text(`Retention Stability: ${analysis.story_score.breakdown.retention_stability}/100`, margin + 3, y)
+    y += 8
+  }
+
   doc.setFontSize(12)
   doc.text("Episode Arc", margin, y)
   y += 8

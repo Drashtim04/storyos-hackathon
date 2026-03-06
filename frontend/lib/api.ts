@@ -40,6 +40,18 @@ export interface OptimizationSuggestion {
   episodes: string[];
 }
 
+export interface StoryScoreBreakdown {
+  cliffhanger_strength: number;
+  emotional_progression: number;
+  retention_stability: number;
+}
+
+export interface StoryScore {
+  score: number;
+  breakdown: StoryScoreBreakdown;
+  binge_potential_score?: number;
+}
+
 export interface StoryAnalysis {
   id?: string;
   story_idea: string;
@@ -48,6 +60,7 @@ export interface StoryAnalysis {
   cliffhanger_scores: CliffhangerItem[];
   retention_heatmap: RetentionRow[];
   optimization_suggestions: OptimizationSuggestion[];
+  story_score?: StoryScore;
   share_token?: string;
   created_at?: string;
 }

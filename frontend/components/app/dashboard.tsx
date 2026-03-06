@@ -4,6 +4,7 @@ import { useState } from "react"
 import { ArrowLeft, Sparkles, FileDown, Link2, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { StoryScorePanel } from "@/components/app/panels/story-score-panel"
 import { EpisodeArcPanel } from "@/components/app/panels/episode-arc-panel"
 import { EmotionalArcPanel } from "@/components/app/panels/emotional-arc-panel"
 import { CliffhangerScorePanel } from "@/components/app/panels/cliffhanger-panel"
@@ -106,8 +107,9 @@ export function Dashboard({ storyIdea, analysis, onReset, isShared }: DashboardP
 
       {/* Tabs for panels */}
       <div className="mx-auto max-w-7xl px-6 py-6">
-        <Tabs defaultValue="episode-arc" className="w-full">
+        <Tabs defaultValue="story-score" className="w-full">
           <TabsList className="mb-6 w-full flex-wrap justify-start gap-1 bg-secondary/30 p-1">
+            <TabsTrigger value="story-score" className="text-xs sm:text-sm">Story Score</TabsTrigger>
             <TabsTrigger value="episode-arc" className="text-xs sm:text-sm">Episode Arc</TabsTrigger>
             <TabsTrigger value="emotional-arc" className="text-xs sm:text-sm">Emotional Arc</TabsTrigger>
             <TabsTrigger value="cliffhanger" className="text-xs sm:text-sm">Cliffhanger Score</TabsTrigger>
@@ -115,6 +117,9 @@ export function Dashboard({ storyIdea, analysis, onReset, isShared }: DashboardP
             <TabsTrigger value="optimization" className="text-xs sm:text-sm">Optimization</TabsTrigger>
           </TabsList>
 
+          <TabsContent value="story-score">
+            <StoryScorePanel data={analysis.story_score} />
+          </TabsContent>
           <TabsContent value="episode-arc">
             <EpisodeArcPanel data={analysis.episode_arc} />
           </TabsContent>

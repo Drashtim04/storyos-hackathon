@@ -18,6 +18,7 @@ def save_analysis(analysis: StoryAnalysis) -> StoryAnalysis:
             for r in analysis.retention_heatmap
         ],
         "optimization_suggestions": [o.model_dump() for o in analysis.optimization_suggestions],
+        "story_score": analysis.story_score.model_dump() if analysis.story_score else None,
         "share_token": share_token,
     }
     if supabase:
@@ -60,7 +61,21 @@ def _row_to_analysis(d: dict) -> StoryAnalysis:
         RetentionRow,
         HeatmapSegment,
         OptimizationSuggestion,
+        StoryScore,
+        StoryScoreBreakdown,
     )
+    
+    # Parse story_score if present
+    story_score_data = d.get("story_score")
+    story_score = None
+    if story_score_data:
+        if isinstance(story_score_data, dict):
+            breakdown_data = story_score_data.get("breakdown", {})
+            story_score = StoryScore(
+                score=story_score_data.get("score", 0),
+                breakdown=StoryScoreBreakdown(**breakdown_data),
+            )
+    
     return StoryAnalysis(
         id=str(d["id"]),
         story_idea=d["story_idea"],
@@ -77,6 +92,7 @@ def _row_to_analysis(d: dict) -> StoryAnalysis:
         optimization_suggestions=[
             OptimizationSuggestion(**x) for x in d["optimization_suggestions"]
         ],
+        story_score=story_score,
         share_token=d.get("share_token"),
         created_at=d.get("created_at"),
     )
