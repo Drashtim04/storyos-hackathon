@@ -299,11 +299,11 @@ def _generate_emotional_arc(n_ep: int, seed: int) -> list[EmotionalDataPoint]:
         data.append(
             EmotionalDataPoint(
                 episode=f"Ep {i + 1}",
-                tension=max(0, min(100, tension)),
-                joy=max(0, min(100, joy)),
-                surprise=max(0, min(100, surprise)),
-                conflict=max(0, min(100, conflict)),
-            )
+                tension=int(max(0, min(100, tension))),
+                joy=int(max(0, min(100, joy))),
+                surprise=int(max(0, min(100, surprise))),
+                conflict=int(max(0, min(100, conflict))),
+)
         )
     return data
 
