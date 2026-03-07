@@ -1,70 +1,250 @@
 # NarrativeIQ – AI Storytelling Intelligence Platform
 
-Full-stack application for analyzing story ideas: chat-based input → AI pipeline approval → episodic arc (5–8 episodes), emotional progression, cliffhanger scoring, retention risk, and optimization suggestions. Each result appears in its own dashboard panel with PDF export and shareable links.
+NarrativeIQ is a full‑stack AI storytelling intelligence platform that analyzes story ideas before production.
 
-## Stack
+Creators describe a story idea through a chat interface. The system runs an AI narrative analysis pipeline and produces insights such as episodic structure, emotional progression, cliffhanger strength, retention risk, and optimization suggestions.
 
-- **Frontend:** Next.js 16, Tailwind CSS, React 19
-- **Backend:** FastAPI
-- **Database:** Supabase (optional; app works without it for local dev)
+The platform helps writers design binge‑worthy episodic stories using data‑driven narrative insights.
 
-## Features
+---
 
-1. **Chat-based story idea input** – Describe your idea; example prompts provided
-2. **AI pipeline approval step** – Review planned analyses before running
-3. **Episodic arc** – 5–8 episodes with beat sheets and pacing
-4. **Emotional progression** – Tension, joy, surprise, conflict across episodes
-5. **Cliffhanger scoring** – Per-episode hook strength (0–100)
-6. **Retention risk prediction** – Heatmap by episode segment
-7. **Optimization suggestions** – Pacing, emotional peaks, retention tips9. **Story Quality Score** – Composite quality metric with detailed breakdown
-10. **Binge Potential Score** – Judges‑friendly one‑line metric showing how addictive the story is (0–100) derived from cliffhanger escalation, emotional intensity, and retention resistance
-**Export:** PDF report and shareable link (when Supabase is configured).
+## Product Workflow
 
-## Quick start
+Story Idea → AI Analysis Plan → User Approval → Narrative Intelligence Pipeline → Dashboard Insights
+
+1. User enters a story idea in a chat interface  
+2. The system generates an AI analysis plan  
+3. User approves the pipeline  
+4. Backend runs narrative intelligence analysis  
+5. Results appear in a multi‑panel analytics dashboard  
+6. Results can be exported as a PDF or shared via link  
+
+---
+
+## Key Features
+
+### Chat‑Based Story Input
+Creators describe story ideas naturally through a conversational interface.
+
+### AI Pipeline Approval
+Users review the analysis steps before execution.
+
+### Episodic Arc Generation
+AI generates a structured **5–8 episode narrative arc**.
+
+### Emotional Progression Analysis
+Tracks emotional signals across episodes:
+
+- tension  
+- joy  
+- surprise  
+- conflict  
+
+Visualized as an emotional arc chart.
+
+### Cliffhanger Scoring
+Each episode ending receives a **hook strength score (0–100)**.
+
+### Retention Risk Prediction
+A heatmap predicts viewer drop‑off across story segments:
+
+Opening → Act 1 → Midpoint → Act 2 → Ending
+
+### Optimization Suggestions
+AI recommends improvements for:
+
+- pacing  
+- emotional peaks  
+- engagement  
+- narrative tension  
+
+### Story Quality Score
+Composite story quality score derived from narrative metrics.
+
+### Binge Potential Score
+A metric estimating how addictive a story is based on:
+
+- cliffhanger escalation  
+- emotional intensity  
+- retention resistance  
+
+Score range: **0–100**
+
+### Export & Sharing
+- Download analysis as **PDF report**
+- Generate **shareable analysis links**
+
+---
+
+## Tech Stack
+
+### Frontend
+- Next.js 16  
+- React 19  
+- Tailwind CSS  
+
+### Backend
+- FastAPI  
+
+### Database
+- Supabase (optional)
+
+### AI
+- Groq LLM
+
+---
+
+## System Architecture
+
+Frontend (Next.js)  
+↓  
+API Requests  
+↓  
+FastAPI Backend  
+↓  
+Narrative Analysis Pipeline  
+↓  
+Groq LLM  
+↓  
+Supabase Storage (optional)
+
+---
+
+## Quick Start
 
 ### Backend
 
 ```bash
 cd backend
 python -m venv .venv
-.venv\Scripts\activate   # Windows
-# source .venv/bin/activate  # macOS/Linux
+.venv\Scripts\activate
+
 pip install -r requirements.txt
-cp .env.example .env     # Edit with SUPABASE_URL, SUPABASE_SERVICE_KEY if using Supabase
+cp .env.example .env
+
 uvicorn app.main:app --reload --port 8000
 ```
+
+Backend runs at:
+
+```
+http://localhost:8000
+```
+
+---
 
 ### Frontend
 
 ```bash
 cd frontend
 pnpm install
-cp .env.example .env.local   # Optional: set NEXT_PUBLIC_API_URL if backend is not on :8000
+cp .env.example .env.local
 pnpm dev
 ```
 
-Open [http://localhost:3000/app](http://localhost:3000/app).
+Open:
 
-### Supabase (optional)
+```
+http://localhost:3000/app
+```
 
-1. Create a project at [supabase.com](https://supabase.com).
-2. Run the migration: **SQL Editor** → paste and run `supabase/migrations/001_story_analyses.sql`.
-3. In **Settings → API** copy the project URL and the `service_role` key (keep it secret).
-4. Set in `backend/.env`:
-   - `SUPABASE_URL=https://your-project.supabase.co`
-   - `SUPABASE_SERVICE_KEY=your-service-role-key`
-5. Set `NEXT_PUBLIC_APP_URL` (e.g. `http://localhost:3000`) so share URLs are correct.
+---
 
-Without Supabase, analysis still runs and the dashboard works; share links will not load (API returns 404 for share token lookup).
+## Supabase Setup (Optional)
+
+1. Create a project at https://supabase.com  
+2. Run the migration:
+
+```
+supabase/migrations/001_story_analyses.sql
+```
+
+3. In Settings → API copy:
+
+```
+SUPABASE_URL
+SUPABASE_SERVICE_KEY
+```
+
+4. Add to:
+
+```
+backend/.env
+```
+
+```
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_KEY=your-service-role-key
+```
+
+---
 
 ## API
 
-- `POST /api/analyze` – Body: `{ "story_idea": "..." }`. Returns full analysis and `share_url` when applicable.
-- `GET /api/analysis/{id}` – Get analysis by ID.
-- `GET /api/share/{token}` – Get analysis by share token (for shareable links).
+### Run Analysis
 
-## Project layout
+```
+POST /api/analyze
+```
 
-- `frontend/` – Next.js app (pages: `/`, `/app`, `/share/[token]`)
-- `backend/` – FastAPI app (`app/main.py`, `app/services/analysis.py`, `app/services/storage.py`)
-- `supabase/migrations/` – SQL for `story_analyses` table
+Request:
+
+```
+{
+ "story_idea": "A college student discovers his roommate runs a secret crime network."
+}
+```
+
+---
+
+### Get Analysis
+
+```
+GET /api/analysis/{id}
+```
+
+---
+
+### Share Analysis
+
+```
+GET /api/share/{token}
+```
+
+---
+
+## Project Structure
+
+```
+frontend/
+   Next.js application
+   pages: / , /app , /share/[token]
+
+backend/
+   FastAPI server
+   app/main.py
+   services/
+       analysis.py
+       storage.py
+
+supabase/
+   migrations/
+       001_story_analyses.sql
+```
+
+---
+
+## Running Without Supabase
+
+If Supabase is not configured:
+
+- analysis pipeline still runs  
+- dashboard works normally  
+- PDF export works  
+- share links return 404  
+
+---
+
+## License
+
+MIT License
